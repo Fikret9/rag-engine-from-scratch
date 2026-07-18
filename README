@@ -1,0 +1,21 @@
+# RAG Engine From Scratch
+
+A production-oriented Retrieval-Augmented Generation engine built incrementally from first principles.
+
+## Goals
+
+- Understand every component
+- Build without high-level frameworks
+- Benchmark architectural decisions
+- Progress from a simple implementation to a production-ready retrieval system
+
+## Roadmap
+
+- [x] PDF ingestion
+- [x] Chunking
+- [x] Embeddings
+- [x] Manual cosine similarity
+- [ ] Qdrant vector database
+- [ ] Metadata filtering
+- [ ] Hybrid retrieval
+- [ ] Reranking
