@@ -1,0 +1,23 @@
+{
+  "Employee-Handbook.pdf": {
+    "sha256": "d696dd90046beb7d4aec45b492e2ed114553ce00b5d9ce780797997730a48607",
+    "last_modified": 1782127951.3941512,
+    "embeddings": [
+      "nomic-embed-text"
+    ]
+  },
+  "Student-Healthcare.pdf": {
+    "sha256": "864d80ccf009565ffe8ac3998056fa78ab2f69d6ada81f4e65c95bb89dec7e33",
+    "last_modified": 1782075299.2384324,
+    "embeddings": [
+      "nomic-embed-text"
+    ]
+  },
+  "jayabraham.pdf": {
+    "sha256": "41c4f510cc13ea5641bde984ea60cc65a0f8062355dac7c65d93325c138007aa",
+    "last_modified": 1781918663.3747385,
+    "embeddings": [
+      "nomic-embed-text"
+    ]
+  }
+}
