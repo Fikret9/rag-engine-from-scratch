@@ -7,6 +7,7 @@ from qdrant_client.models import VectorParams, Distance, PointStruct
 from DocumentMetadataStore import DocumentMetadataStore
 
 from RAGChatbot import RAGChatbot
+from document_processor import DocumentProcessor
 from chunker import Chunker
 from evaluate import evaluate
 from ollama_embedding_provider import OllamaEmbeddingProvider
@@ -17,7 +18,6 @@ from retriever import Retriever
 from build_embeddings import build_embeddings
 from test_cases import test_cases
 from pathlib import Path
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QDRANT_PATH = PROJECT_ROOT / "qdrant_data"
@@ -34,6 +34,13 @@ try:
 
     existing = {c.name for c in client.get_collections().collections}
 
+    processor = DocumentProcessor(
+        client,
+        provider,
+        metadata_store,
+        model_id
+    )
+
     if "documents" not in existing:
         client.create_collection(
         collection_name="documents",
@@ -43,58 +50,11 @@ try:
         ),
         )
 
+
     for file_path in os.listdir("data"):
         full_path = os.path.join("data", file_path)
-        filename = file_path
-        sha256, last_modified = DocumentMetadataStore.compute_file_info(full_path)
-        chunk_file = f"cache/chunks/{filename}.json"
-        chunk_file = chunk_file.replace(".pdf", "")
-
-        if filename not in metadata_store.data:
-            extractor = PDFReader(full_path)
-            doc = extractor.read()
-            """    Create chunks """
-            chunker = Chunker()
-            chunks = chunker.chunk(doc)
-            metadata_store.update_document(filename,sha256,last_modified)
-            texts = [chunk.text for chunk in chunks]
-            """    Create embeddings from Vectors """
-            response = provider.embed(texts)
-            embeddings = build_embeddings(chunks, response.embeddings, model_id) #"""    Build embeddings """
-
-            points = []
-            for chunk, embedding in zip(chunks, embeddings):
-                point_id = str(
-                        uuid.uuid5(
-                        uuid.NAMESPACE_URL,
-                        chunk.id
-                        )
-                )
-                points.append(
-
-                    PointStruct(
-                        id=point_id,
-                        vector=embedding.vector,
-                        payload={
-                            "text": chunk.text,
-                            "source": chunk.source,
-                            "word_offset": chunk.word_offset,
-                            "model_id": embedding.model_id,
-                            },
-                        )
-                    )
-
-            client.upsert(
-                    collection_name="documents",
-                    points=points,
-            )
-
-            metadata_store.add_embedding_model(filename,model_id)
-            metadata_store.save()
-        elif metadata_store.has_changed(filename, sha256):
-            print ("Store changed")
-        else:
-            print ("Store unchanged")
+        processor.process_document(full_path)
+        print("here")
 
     """    Create Vector for the query """
     response = provider.embed([" vacation policy"])
@@ -117,3 +77,4 @@ try:
     bot.chat_loop()
 finally:
     client.close()
+
