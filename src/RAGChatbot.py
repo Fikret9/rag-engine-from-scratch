@@ -10,16 +10,17 @@ class RAGChatbot:
         question_vector = response.embeddings[0]
         results = self.retriever.find_relevant_context(question_vector)
 
+        for r in results:
+            print(r)
+
         parts = []
-
-
         for score, text, source in results:
+            print(score, source)
             parts.append(
                 f"Source: {source}\n{text}"
             )
 
         context_text = "\n\n---\n\n".join(parts)
-
 
         prompt = f"""
         You are answering questions about company documents.
@@ -31,6 +32,9 @@ class RAGChatbot:
         Only say "I don't know" if the context contains
         no relevant information.
         
+        Do not include document names or source citations in your answer.
+        The UI displays sources separately.
+        
         Context:
         {context_text}
         Question:
@@ -38,7 +42,8 @@ class RAGChatbot:
         If the answer is not in the context, say you don't know.
         """
 
-        return self.llm_provider.generate(prompt)
+        answer = self.llm_provider.generate(prompt)
+        return answer, results      # <-- CHANGED
 
 
     def chat_loop(self):
@@ -47,10 +52,3 @@ class RAGChatbot:
             if question.lower() == "quit":
                 break
             print(self.ask(question))
-
-    def ask_clicked():
-
-        question = question_entry.get()
-        answer = chatbot.ask(question)
-        response_box.delete("1.0", "end")
-        response_box.insert("end", answer)

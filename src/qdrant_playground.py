@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QDRANT_PATH = PROJECT_ROOT / "qdrant_data"
 
 client = QdrantClient(path=str(QDRANT_PATH))
-help(client.d)
+client.delete_collection("documents") 
 
 collections = client.get_collections()
 print(collections)

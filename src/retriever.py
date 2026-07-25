@@ -31,7 +31,10 @@ class Retriever:
                     point.payload["source"],
                 )
             )
-        #print (results)
+
+        for score, text, source in results:
+            print(repr(source))
+
         return results
 
 

@@ -4,4 +4,4 @@ from dataclasses import dataclass
 class Document:
     text: str
     source: str
-    page_count: int
+    page_count: int = 1

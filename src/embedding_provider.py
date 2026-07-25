@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-import chunk
 import embedding
 
 class EmbeddingProvider(ABC):

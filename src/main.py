@@ -1,5 +1,4 @@
 import os
-import uuid
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
@@ -8,16 +7,14 @@ from DocumentMetadataStore import DocumentMetadataStore
 
 from RAGChatbot import RAGChatbot
 from document_processor import DocumentProcessor
-from chunker import Chunker
 from evaluate import evaluate
 from ollama_embedding_provider import OllamaEmbeddingProvider
 from ollama_llm_provider import OllamaLLMProvider
-from pdf_reader import PDFReader
 
 from retriever import Retriever
-from build_embeddings import build_embeddings
 from test_cases import test_cases
 from pathlib import Path
+from ui.main_window import MainWindow
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QDRANT_PATH = PROJECT_ROOT / "qdrant_data"
@@ -50,11 +47,9 @@ try:
         ),
         )
 
-
-    for file_path in os.listdir("data"):
-        full_path = os.path.join("data", file_path)
-        processor.process_document(full_path)
-        print("here")
+    #for file_path in os.listdir("data"):
+    #    full_path = os.path.join("data", file_path)
+    #    processor.process_document(full_path)
 
     """    Create Vector for the query """
     response = provider.embed([" vacation policy"])
@@ -74,6 +69,10 @@ try:
     chat_model="qwen2.5:1.5b"
     llm_provider = OllamaLLMProvider(chat_model)
     bot = RAGChatbot(provider=provider, retriever=retriever, llm_provider=llm_provider, client=client)
+
+    window = MainWindow(processor,bot, metadata_store)
+    window.mainloop()
+
     bot.chat_loop()
 finally:
     client.close()

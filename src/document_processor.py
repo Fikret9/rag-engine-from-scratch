@@ -1,11 +1,13 @@
 import os
 import uuid
+from pathlib import Path
 
-from qdrant_client.grpc import PointStruct
-
+from qdrant_client.models import PointStruct
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 from DocumentMetadataStore import DocumentMetadataStore
 from build_embeddings import build_embeddings
 from chunker import Chunker
+from documen_reader_factory import DocumentReaderFactory
 from pdf_reader import PDFReader
 
 
@@ -18,14 +20,22 @@ class DocumentProcessor:
         self.model_id = model_id
 
     def process_document(self,full_path):
+
+        print("1. process_document entered")
         filename = os.path.basename(full_path)
+        print("2. filename =", filename)
+
         sha256, last_modified = DocumentMetadataStore.compute_file_info(full_path)
+        print("3. computed file info")
+
         chunk_file = f"cache/chunks/{filename}.json"
         chunk_file = chunk_file.replace(".pdf", "")
 
         if filename not in self.metadata_store.data:
-            extractor = PDFReader(full_path)
-            doc = extractor.read()
+            print("4. New document")
+            reader = DocumentReaderFactory.create(full_path)
+            doc = reader.read()
+            print(full_path)
             """    Create chunks """
             chunker = Chunker()
             chunks = chunker.chunk(doc)
@@ -34,6 +44,7 @@ class DocumentProcessor:
             """    Create embeddings from Vectors """
             response = self.provider.embed(texts)
             embeddings = build_embeddings(chunks, response.embeddings, self.model_id) #"""    Build embeddings """
+            print("5. Creating embeddings")
 
             points = []
             for chunk, embedding in zip(chunks, embeddings):
@@ -50,7 +61,7 @@ class DocumentProcessor:
                         vector=embedding.vector,
                         payload={
                             "text": chunk.text,
-                            "source": chunk.source,
+                            "source": Path(chunk.source).name,
                             "word_offset": chunk.word_offset,
                             "model_id": embedding.model_id,
                         },
@@ -62,6 +73,8 @@ class DocumentProcessor:
                 points=points,
             )
 
+            print(f"Upserted {len(points)} points")
+            
             self.metadata_store.add_embedding_model(filename,self.model_id)
             self.metadata_store.save()
         elif self.metadata_store.has_changed(filename, sha256):
@@ -69,5 +82,32 @@ class DocumentProcessor:
         else:
             print ("Store unchanged")
 
+    def delete_document(self, source: str):
+        self.client.delete(
+            collection_name="documents",
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(value=source)
+                )
+                ]
+            )
+        )
+
+        response = self.client.scroll(
+            collection_name="documents",
+            scroll_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(value=source)
+                    )
+                ]
+            ),
+            limit=5,
+        )
+
+        print(response)
 
 

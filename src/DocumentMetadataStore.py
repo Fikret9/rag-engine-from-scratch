@@ -41,6 +41,9 @@ class DocumentMetadataStore:
     def update_document(self, filename, sha256, last_modified):
         self.data[filename] = {"sha256": sha256, "last_modified": last_modified, "embeddings": []}
 
+    def delete_document(self, filename):
+        self.data.pop(filename, None)
+
     def add_embedding_model(self, filename, model_id):
         models = self.data[filename]["embeddings"]
         if model_id not in models:
