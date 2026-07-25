@@ -329,7 +329,7 @@ class MainWindow(ctk.CTk):
         self.reload_documents()
 
         self.add_button.configure(
-            text="+ Add PDF",
+            text="+ Add Document",
             state="normal",
             fg_color="#3574F0",
             hover_color="#4A84F5"
@@ -353,7 +353,7 @@ class MainWindow(ctk.CTk):
 
             label = ctk.CTkLabel(
                 card,
-                text=f"📄 {filename}",
+                text=f"📄 {filename[:25]}",
                 anchor="w",
                 font=("Segoe UI", 12)              # <-- CHANGED (was 13)
             )
